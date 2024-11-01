@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Acciones Global</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #1a237e;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #283593;
+            margin-top: 20px;
+        }
+
+        h3 {
+            color: #303f9f;
+            margin-top: 15px;
+        }
+
+        .busqueda-seccion {
+            margin: 20px 0;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .busqueda-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .simbolo-input, .mercado-select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .simbolo-input {
+            flex: 1;
+        }
+
+        .buscar-btn {
+            padding: 12px 24px;
+            background: #1a237e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .buscar-btn:hover {
+            background: #283593;
+        }
+
+        .simbolos-lista {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .simbolo-item {
+            padding: 10px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .simbolo-item:hover {
+            background: #e8eaf6;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .error {
+            padding: 15px;
+            background-color: #ffebee;
+            color: #c62828;
+            border-radius: 4px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        #resultados {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .empresa-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+
+        .logo-empresa img {
+            max-width: 100px;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .descripcion-empresa {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .metricas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metrica {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .metrica h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .metrica div {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #1a237e;
+        }
+
+        .recomendacion-section {
+            margin-top: 30px;
+        }
+
+        .recomendacion-card {
+            background: #e8eaf6;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        .recomendacion-card h3 {
+            margin-top: 0;
+            color: #1a237e;
+        }
+
+        #grafico {
+            width: 100%;
+            height: 400px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .busqueda-form {
+                flex-direction: column;
+            }
+            
+            .busqueda-form > * {
+                width: 100%;
+            }
+            
+            .metricas-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .empresa-info {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Análisis de Acciones Global</h1>
+
+        <section class="busqueda-seccion">
+            <h2>Buscar Acción</h2>
+            <div class="busqueda-form">
+                <input type="text" id="simboloBusqueda" placeholder="Ingresa el símbolo (ej: AAPL, MSFT)" class="simbolo-input">
+                <select id="mercadoSelect" class="mercado-select">
+                    <option value="">Mercado Global (Sin sufijo)</option>
+                    <option value="BMV">BMV (México)</option>
+                    <option value="NYSE">NYSE (EE.UU.)</option>
+                    <option value="NASDAQ">NASDAQ (EE.UU.)</option>
+                    <option value="LON">LSE (Londres)</option>
+                    <option value="TSX">TSX (Toronto)</option>
+                </select>
+                <button onclick="buscarAccion()" class="buscar-btn">Buscar</button>
+            </div>
+        </section>
+
+        <section>
+            <h2>Símbolos Sugeridos BMV</h2>
+            <div class="simbolos-lista">
+                <div class="simbolo-item" onclick="seleccionarSimbolo('FEMSA')">FEMSA</div>
+                <div class="simbolo-item" onclick="seleccionarSimbolo('WALMEX')">WALMEX</div>
+                <div class="simbolo-item" onclick="seleccionarSimbolo('BIMBO')">BIMBO</div>
+                <div class="simbolo-item" onclick="seleccionarSimbolo('AMX')">AMX</div>
+                <div class="simbolo-item" onclick="seleccionarSimbolo('CEMEX')">CEMEX</div>
+                <div class="simbolo-item" onclick="seleccionarSimbolo('TLEVISA')">TLEVISA</div>
+                <div class="simbolo-item" onclick="seleccionarSimbolo('GFNORTE')">GFNORTE</div>
+                <div class="simbolo-item" onclick="seleccionarSimbolo('ELEKTRA')">ELEKTRA</div>
+            </div>
+        </section>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="resultados" style="display: none;">
+            <div class="empresa-info">
+                <div id="logoEmpresa" class="logo-empresa">
+                    <!-- Logo se insertará aquí -->
+                </div>
+                <div>
+                    <h2 id="nombreEmpresa"></h2>
+                    <div id="descripcionEmpresa" class="descripcion-empresa"></div>
+                </div>
+            </div>
+
+            <div class="metricas-grid">
+                <div class="metrica">
+                    <h3>Precio Actual</h3>
+                    <div id="precio"></div>
+                </div>
+                <div class="metrica">
+                    <h3>Rendimiento</h3>
+                    <div id="rendimiento"></div>
+                </div>
+                <div class="metrica">
+                    <h3>Precio Máximo</h3>
+                    <div id="precioMax"></div>
+                </div>
+                <div class="metrica">
+                    <h3>Precio Mínimo</h3>
+                    <div id="precioMin"></div>
+                </div>
+            </div>
+
+            <div class="recomendacion-section">
+                <h2>Recomendación de Inversión</h2>
+                <div class="recomendacion-card">
+                    <h3>Decisión</h3>
+                    <div id="recomendacion"></div>
+                    <h3>Nivel de Riesgo</h3>
+                    <div id="nivelRiesgo"></div>
+                    <h3>Sugerencia de Inversión</h3>
+                    <div id="inversionSugerida"></div>
+                    <h3>Razones del Análisis</h3>
+                    <div id="razonesAnalisis"></div>
+                </div>
+            </div>
+
+            <div>
+                <h3>Histórico de Precios</h3>
+                <div id="grafico"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function buscarAccion() {
+            const simbolo = document.getElementById('simboloBusqueda').value;
+            const mercado = document.getElementById('mercadoSelect').value;
+            
+            if (!simbolo) {
+                mostrarError('Por favor, ingresa un símbolo de acción.');
+                return;
+            }
+            
+            // Ocultar error previo si existe
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('resultados').style.display = 'none';
+            
+            // Realizar la búsqueda
+            fetch(`/api/analizar?simbolo=${encodeURIComponent(simbolo)}&mercado=${encodeURIComponent(mercado)}`)
+                .then(response => response.json())
+                .then(datos => {
+                    if (datos.error) {
+                        mostrarError(datos.error);
+                    } else {
+                        mostrarResultados(datos);
+                    }
+                })
+                .catch(error => {
+                    mostrarError('Error al conectar con el servidor. Por favor, intenta de nuevo.');
+                });
+        }
+
+        function seleccionarSimbolo(simbolo) {
+            document.getElementById('simboloBusqueda').value = simbolo;
+            document.getElementById('mercadoSelect').value = 'BMV';
+            buscarAccion();
+        }
+
+        function mostrarError(mensaje) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = mensaje;
+            errorDiv.style.display = 'block';
+            document.getElementById('resultados').style.display = 'none';
+        }
+
+        function mostrarResultados(datos) {
+            document.getElementById('resultados').style.display = 'block';
+            
+            // Actualizar información de la empresa
+            document.getElementById('nombreEmpresa').textContent = datos.nombre_empresa;
+            document.getElementById('descripcionEmpresa').textContent = datos.descripcion;
+            
+            // Actualizar logo si está disponible
+            const logoDiv = document.getElementById('logoEmpresa');
+            if (datos.logo_url) {
+                logoDiv.innerHTML = `<img src="${datos.logo_url}" alt="Logo ${datos.nombre_empresa}">`;
+            } else {
+                logoDiv.innerHTML = ''; // Limpiar si no hay logo
+            }
+            
+            // Actualizar métricas
+            document.getElementById('precio').textContent = `$${datos.precio_actual}`;
+            document.getElementById('rendimiento').textContent = `${datos.rendimiento_periodo}%`;
+            document.getElementById('precioMax').textContent = `$${datos.precio_maximo}`;
+            document.getElementById('precioMin').textContent = `$${datos.precio_minimo}`;
+            
+            // Actualizar recomendación
+            document.getElementById('recomendacion').textContent = datos.recomendacion;
+            document.getElementById('nivelRiesgo').textContent = datos.nivel_riesgo;
+            document.getElementById('inversionSugerida').textContent = datos.inversion_sugerida;
+            
+            // Actualizar razones del análisis
+            const razonesHtml = datos.razones_analisis.map(razon => `<li>${razon}</li>`).join('');
+            document.getElementById('razonesAnalisis').innerHTML = `<ul>${razonesHtml}</ul>`;
+            
+            // Crear gráfico
+            const trace = {
+                x: datos.fechas,
+                y: datos.precios,
+                type: 'scatter',
+                mode: 'lines',
+                name: datos.simbolo,
+                line: {
+                    color: '#1a237e'
+                }
+            };
+
+            const layout = {
+                title: `Histórico de Precios - ${datos.simbolo}`,
+                xaxis: {
+                    title: 'Fecha'
+                },
+                yaxis: {
+                    title: 'Precio'
+                },
+                showlegend: true
+            };
+
+            Plotly.newPlot('grafico', [trace], layout);
+        }
+
+        // Event listener para buscar al presionar Enter en el campo de búsqueda
+        document.getElementById('simboloBusqueda').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscarAccion();
+            }
+        });
+    </script>
+</body>
+</html>
