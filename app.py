@@ -19,11 +19,11 @@ CACHE_DURATION = 300  # 5 minutos en segundos
 
 # Símbolos populares de la BMV
 SIMBOLOS_SUGERIDOS = {
-    'FEMSA': 'FEMSA.MX',
+    'FEMSA': 'KOFUBL.MX',
     'WALMEX': 'WALMEX.MX',
     'BIMBO': 'BIMBOA.MX',
-    'TLEVISA': 'TLEVICPO.MX',
-    'AMX': 'AMXL.MX',
+    'TLEVISA': 'TLEVISACPO.MX',
+    'AMX': 'AMXB.MX',
     'CEMEX': 'CEMEXCPO.MX',
     'GFNORTE': 'GFNORTEO.MX',
     'GMXT': 'GMXT.MX',
