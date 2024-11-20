@@ -10,16 +10,16 @@ app = Flask(__name__)
 
 # Sugerencias de símbolos populares de la BMV
 SIMBOLOS_SUGERIDOS = {
-    'FEMSA': 'FEMSA.MX',
-    'WALMEX': 'WALMEX.MX',
-    'BIMBO': 'BIMBOA.MX',
-    'TLEVISA': 'TLEVICPO.MX',
-    'AMX': 'AMXL.MX',
-    'CEMEX': 'CEMEXCPO.MX',
-    'GFNORTE': 'GFNORTEO.MX',
-    'GMXT': 'GMXT.MX',
-    'ORBIA': 'ORBIA.MX',
-    'ELEKTRA': 'ELEKTRA.MX'
+    'FEMSA': 'FEMSA',
+    'WALMEX': 'WALMEX',
+    'BIMBO': 'BIMBOA',
+    'TLEVISA': 'TLEVICPO',
+    'AMX': 'AMXL',
+    'CEMEX': 'CEMEXCPO',
+    'GFNORTE': 'GFNORTEO',
+    'GMXT': 'GMXT',
+    'ORBIA': 'ORBIA',
+    'ELEKTRA': 'ELEKTRA'
 }
 
 
