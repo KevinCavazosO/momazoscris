@@ -10,34 +10,31 @@ app = Flask(__name__)
 
 # Sugerencias de símbolos populares de la BMV
 SIMBOLOS_SUGERIDOS = {
-    'FEMSA': 'FEMSA',
-    'WALMEX': 'WALMEX',
-    'BIMBO': 'BIMBOA',
-    'TLEVISA': 'TLEVICPO',
-    'AMX': 'AMXL',
-    'CEMEX': 'CEMEXCPO',
-    'GFNORTE': 'GFNORTEO',
-    'GMXT': 'GMXT',
-    'ORBIA': 'ORBIA',
-    'ELEKTRA': 'ELEKTRA'
+    'FEMSA': 'FEMSA.MX',
+    'WALMEX': 'WALMEX.MX',
+    'BIMBO': 'BIMBOA.MX',
+    'TLEVISA': 'TLEVICPO.MX',
+    'AMX': 'AMXL.MX',
+    'CEMEX': 'CEMEXCPO.MX',
+    'GFNORTE': 'GFNORTEO.MX',
+    'GMXT': 'GMXT.MX',
+    'ORBIA': 'ORBIA.MX',
+    'ELEKTRA': 'ELEKTRA.MX'
 }
 
 
 def formatear_simbolo(simbolo, mercado=None):
     """
-    Formatea el símbolo según el mercado especificado
+    Formatea el símbolo según el mercado especificado.
     """
     simbolo = simbolo.upper().strip()
 
-    # Si es un símbolo sugerido de BMV, usar el mapeo existente
     if simbolo in SIMBOLOS_SUGERIDOS:
         return SIMBOLOS_SUGERIDOS[simbolo]
 
-    # Si no se especifica mercado, intentar sin sufijo
     if not mercado:
         return simbolo
 
-    # Mapeo de mercados a sufijos
     sufijos_mercado = {
         'BMV': '.MX',
         'NYSE': '',
@@ -52,52 +49,42 @@ def formatear_simbolo(simbolo, mercado=None):
 
 def calcular_recomendacion(hist, info):
     """
-    Calcula la recomendación de inversión basada en análisis técnico y fundamental
+    Calcula la recomendación de inversión basada en análisis técnico y fundamental.
     """
-    # Calcular volatilidad
     rendimientos_diarios = hist['Close'].pct_change()
     volatilidad = rendimientos_diarios.std() * np.sqrt(252)  # Anualizada
 
-    # Calcular tendencia (usando regresión lineal)
     x = np.arange(len(hist['Close']))
     slope, _, r_value, _, _ = stats.linregress(x, hist['Close'])
     tendencia = slope > 0
     r_squared = r_value ** 2
 
-    # Calcular métricas fundamentales
     pe_ratio = info.get('forwardPE', 0)
-    dividend_yield = info.get('dividendYield', 0) if info.get('dividendYield') else 0
+    dividend_yield = info.get('dividendYield', 0) or 0
 
-    # Sistema de puntuación
     score = 0
     razones = []
 
-    # Evaluar tendencia
     if tendencia:
         score += 2
         razones.append("La acción muestra una tendencia alcista")
 
-    # Evaluar consistencia de la tendencia
     if r_squared > 0.7:
         score += 1
         razones.append("La tendencia es consistente")
 
-    # Evaluar volatilidad
-    if volatilidad < 0.3:  # 30% es un umbral común
+    if volatilidad < 0.3:
         score += 2
         razones.append("La volatilidad es moderada")
 
-    # Evaluar ratio P/E
-    if 10 < pe_ratio < 25:  # Rango PE razonable
+    if 10 < pe_ratio < 25:
         score += 1
         razones.append("El ratio P/E está en un rango saludable")
 
-    # Evaluar dividendos
-    if dividend_yield > 0.02:  # 2% o más
+    if dividend_yield > 0.02:
         score += 1
         razones.append("Ofrece un dividendo atractivo")
 
-    # Determinar recomendación basada en el score total
     if score >= 5:
         recomendacion = "Comprar"
         nivel_riesgo = "Bajo"
@@ -122,38 +109,29 @@ def calcular_recomendacion(hist, info):
 
 def analizar_accion(simbolo, mercado=None):
     """
-    Analiza una acción y retorna información detallada sobre ella
+    Analiza una acción y retorna información detallada sobre ella.
     """
     try:
         simbolo_formateado = formatear_simbolo(simbolo, mercado)
-        print(f"Intentando obtener datos para: {simbolo_formateado}")
-
-        # Obtener datos de Yahoo Finance
         accion = yf.Ticker(simbolo_formateado)
         hist = accion.history(period="6mo")
         info = accion.info
 
-        # Verificar si se encontraron datos
         if hist.empty:
             return {
-                "error": f"No se encontraron datos para el símbolo {simbolo_formateado}. " +
-                         "Verifica que el símbolo y el mercado sean correctos."
+                "error": f"No se encontraron datos para el símbolo {simbolo_formateado}. Verifica que el símbolo y el mercado sean correctos."
             }
 
-        # Calcular métricas básicas
         precio_actual = hist['Close'][-1]
         precio_inicial = hist['Close'][0]
         rendimiento = ((precio_actual - precio_inicial) / precio_inicial) * 100
 
-        # Obtener información adicional de la empresa
         nombre_empresa = info.get('longName', simbolo_formateado)
         descripcion = info.get('longBusinessSummary', 'Información no disponible')
         logo_url = info.get('logo_url', '')
 
-        # Calcular recomendación
         analisis = calcular_recomendacion(hist, info)
 
-        # Preparar respuesta
         return {
             "simbolo": simbolo_formateado,
             "nombre_empresa": nombre_empresa,
@@ -171,22 +149,21 @@ def analizar_accion(simbolo, mercado=None):
             "inversion_sugerida": analisis["inversion_sugerida"],
             "razones_analisis": analisis["razones"]
         }
-    except Exception as e:
-        print(f"Error completo: {traceback.format_exc()}")
+    except Exception:
         return {
-            "error": "Error al analizar la acción. Por favor, verifica el símbolo y el mercado e intenta de nuevo."
+            "error": "Error al analizar la acción. Verifica el símbolo y el mercado e intenta de nuevo."
         }
 
 
 @app.route('/')
 def home():
-    """Ruta principal que muestra la interfaz de usuario"""
+    """Ruta principal que muestra la interfaz de usuario."""
     return render_template('index.html', simbolos=SIMBOLOS_SUGERIDOS)
 
 
 @app.route('/api/analizar')
 def api_analizar():
-    """API endpoint para analizar una acción"""
+    """API endpoint para analizar una acción."""
     simbolo = request.args.get('simbolo', '')
     mercado = request.args.get('mercado', None)
 
